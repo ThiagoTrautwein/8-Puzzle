@@ -1,6 +1,5 @@
 from typing import Iterable, Set, Tuple
-from queue import PriorityQueue
-import time
+from queue import PriorityQueue, Queue, LifoQueue
 
 class Nodo:
     """
@@ -21,6 +20,13 @@ class Nodo:
     
     def __lt__(self, other):
         return self.custo < other.custo
+    
+    def __eq__(self, other):
+        if (isinstance(other, Nodo)):
+            return self.estado == other.estado and self.acao == other.acao
+        return False
+    def __hash__(self):
+        return hash((self.estado, self.acao))
     
 def sucessor(estado:str)->Set[Tuple[str,str]]:
     """
@@ -135,24 +141,171 @@ def astar_hamming(estado:str)->list[str]:
     fronteira.put((custo, nodo))
 
     explorados = set()
+    custo_total = 0
+    nodos_expandidos = 0
     while not fronteira.empty():
         custo, v = fronteira.get()
         if (v.estado == objetivo):
             caminho = []
             while v.pai is not None:
                 caminho.append(v.acao)
+                custo_total += v.custo
                 v = v.pai
             caminho.reverse()
+            #print(f'Nodos Expandidos:{nodos_expandidos} - Custo Total:{custo_total}')
             return caminho
         
         if (v.estado not in explorados):
             explorados.add(v.estado)
             sucessores = expande(v)
+            nodos_expandidos += 1
             for succ in sucessores:
                 if (succ.estado not in explorados):
                     novo_custo = succ.custo + calcula_hamming(succ.estado)
                     fronteira.put((novo_custo, succ))
+    #print(f'Solução Não Encontrada - Nodos Expandidos:{nodos_expandidos}')
     return None
+
+def astar_manhattan(estado:str)->list[str]:
+    """
+    Recebe um estado (string), executa a busca A* com h(n) = soma das distâncias de Manhattan e
+    retorna uma lista de ações que leva do
+    estado recebido até o objetivo ("12345678_").
+    Caso não haja solução a partir do estado recebido, retorna None
+    :param estado: str
+    :return:
+    """
+    objetivo = "12345678_"
+
+    if not eh_soluvel(estado):
+        return None
+
+    fronteira = PriorityQueue()
+    nodo = Nodo(estado, None, None, 0)
+    custo = calcula_manhattan(estado)
+
+    fronteira.put((custo, nodo))
+
+    explorados = []
+    custo_total = 0
+    nodos_expandidos = 0
+    while not fronteira.empty():
+        custo, v = fronteira.get()
+        if (v.estado == objetivo):
+            caminho = []
+            while v.pai is not None:
+                caminho.append(v.acao)
+                custo_total += v.custo
+                v = v.pai
+            caminho.reverse()
+            #print(f'Nodos Expandidos:{nodos_expandidos} - Custo Total:{custo_total}')
+            return caminho
+        
+        if (v.estado not in explorados):
+            explorados.append(v.estado)
+            sucessores = expande(v)
+            nodos_expandidos += 1
+            for succ in sucessores:
+                if (succ.estado not in explorados):
+                    novo_custo = succ.custo + calcula_manhattan(succ.estado)
+                    fronteira.put((novo_custo, succ))
+    #print(f'Solução Não Encontrada - Nodos Expandidos:{nodos_expandidos}')
+    return None
+
+#opcional,extra
+def bfs(estado:str)->list[str]:
+    """
+    Recebe um estado (string), executa a busca em LARGURA e
+    retorna uma lista de ações que leva do
+    estado recebido até o objetivo ("12345678_").
+    Caso não haja solução a partir do estado recebido, retorna None
+    :param estado: str
+    :return:
+    """
+    # substituir a linha abaixo pelo seu codigo
+    objetivo = "12345678_"
+
+    fronteira = Queue()
+    nodo = Nodo(estado, None, None, 0)
+
+    fronteira.put(nodo)
+
+    explorados = set()
+    nodos_expandidos = 0
+    while not fronteira.empty():
+        v = fronteira.get()
+        if (v.estado == objetivo):
+            caminho = []
+            while v.pai is not None:
+                caminho.append(v.acao)
+                v = v.pai
+            caminho.reverse()
+            #print(f'Nodos Expandidos:{nodos_expandidos}')
+            return caminho
+        
+        if (v.estado not in explorados):
+            explorados.add(v.estado)
+            sucessores = expande(v)
+            nodos_expandidos += 1
+            for succ in sucessores:
+                if (succ.estado not in explorados):
+                    fronteira.put(succ)
+    #print(f'Solução Não Encontrada - Nodos Expandidos:{nodos_expandidos}')
+    return None
+
+#opcional,extra
+def dfs(estado:str)->list[str]:
+    """
+    Recebe um estado (string), executa a busca em PROFUNDIDADE e
+    retorna uma lista de ações que leva do
+    estado recebido até o objetivo ("12345678_").
+    Caso não haja solução a partir do estado recebido, retorna None
+    :param estado: str
+    :return:
+    """
+    # substituir a linha abaixo pelo seu codigo
+    objetivo = "12345678_"
+
+    fronteira = LifoQueue()
+    nodo = Nodo(estado, None, None, 0)
+
+    fronteira.put(nodo)
+
+    explorados = set()
+    nodos_expandidos = 0
+    while not fronteira.empty():
+        v = fronteira.get()
+        if (v.estado == objetivo):
+            caminho = []
+            while v.pai is not None:
+                caminho.append(v.acao)
+                v = v.pai
+            caminho.reverse()
+            #print(f'Nodos Expandidos:{nodos_expandidos}')
+            return caminho
+        
+        if (v.estado not in explorados):
+            explorados.add(v.estado)
+            sucessores = expande(v)
+            nodos_expandidos += 1
+            for succ in sucessores:
+                if (succ.estado not in explorados):
+                    fronteira.put(succ)
+    #print(f'Solução Não Encontrada - Nodos Expandidos:{nodos_expandidos}')
+    return None
+
+#opcional,extra
+def astar_new_heuristic(estado:str)->list[str]:
+    """
+    Recebe um estado (string), executa a busca A* com h(n) = sua nova heurística e
+    retorna uma lista de ações que leva do
+    estado recebido até o objetivo ("12345678_").
+    Caso não haja solução a partir do estado recebido, retorna None
+    :param estado: str
+    :return:
+    """
+    # substituir a linha abaixo pelo seu codigo
+    raise NotImplementedError
 
 def conta_inversoes(estado):
     # Função para contar o número de inversões no estado
@@ -168,79 +321,6 @@ def eh_soluvel(estado):
     # Um estado é solúvel se o número de inversões for par
     return conta_inversoes(estado) % 2 == 0
 
-def astar_manhattan(estado:str)->list[str]:
-    """
-    Recebe um estado (string), executa a busca A* com h(n) = soma das distâncias de Manhattan e
-    retorna uma lista de ações que leva do
-    estado recebido até o objetivo ("12345678_").
-    Caso não haja solução a partir do estado recebido, retorna None
-    :param estado: str
-    :return:
-    """
-    objetivo = "12345678_"
-    if (not eh_soluvel(estado)):
-        return None
-
-    fronteira = PriorityQueue()
-    nodo = Nodo(estado, None, None, 0)
-    custo = calcula_manhattan(estado)
-
-    fronteira.put((custo, nodo))
-
-    explorados = []
-    while not fronteira.empty():
-        custo, v = fronteira.get()
-        if (v.estado == objetivo):
-            caminho = []
-            while v.pai is not None:
-                caminho.append(v.acao)
-                v = v.pai
-            caminho.reverse()
-            return caminho
-        
-        if (v.estado not in explorados):
-            explorados.append(v.estado)
-            sucessores = expande(v)
-            for succ in sucessores:
-                novo_custo = succ.custo + calcula_manhattan(succ.estado)
-                fronteira.put((novo_custo, succ))
-    return None
-
-#opcional,extra
-def bfs(estado:str)->list[str]:
-    """
-    Recebe um estado (string), executa a busca em LARGURA e
-    retorna uma lista de ações que leva do
-    estado recebido até o objetivo ("12345678_").
-    Caso não haja solução a partir do estado recebido, retorna None
-    :param estado: str
-    :return:
-    """
-    # substituir a linha abaixo pelo seu codigo
-    raise NotImplementedError
-
-#opcional,extra
-def dfs(estado:str)->list[str]:
-    """
-    Recebe um estado (string), executa a busca em PROFUNDIDADE e
-    retorna uma lista de ações que leva do
-    estado recebido até o objetivo ("12345678_").
-    Caso não haja solução a partir do estado recebido, retorna None
-    :param estado: str
-    :return:
-    """
-    # substituir a linha abaixo pelo seu codigo
-    raise NotImplementedError
-
-#opcional,extra
-def astar_new_heuristic(estado:str)->list[str]:
-    """
-    Recebe um estado (string), executa a busca A* com h(n) = sua nova heurística e
-    retorna uma lista de ações que leva do
-    estado recebido até o objetivo ("12345678_").
-    Caso não haja solução a partir do estado recebido, retorna None
-    :param estado: str
-    :return:
-    """
-    # substituir a linha abaixo pelo seu codigo
-    raise NotImplementedError
+if __name__ == "__main__":
+    estado = "185423_67"
+    astar_hamming(estado)
