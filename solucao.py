@@ -177,16 +177,13 @@ def astar_manhattan(estado:str)->list[str]:
     """
     objetivo = "12345678_"
 
-    if not eh_soluvel(estado):
-        return None
-
     fronteira = PriorityQueue()
     nodo = Nodo(estado, None, None, 0)
     custo = calcula_manhattan(estado)
 
     fronteira.put((custo, nodo))
 
-    explorados = []
+    explorados = set()
     custo_total = 0
     nodos_expandidos = 0
     while not fronteira.empty():
@@ -202,7 +199,7 @@ def astar_manhattan(estado:str)->list[str]:
             return caminho
         
         if (v.estado not in explorados):
-            explorados.append(v.estado)
+            explorados.add(v.estado)
             sucessores = expande(v)
             nodos_expandidos += 1
             for succ in sucessores:
@@ -307,20 +304,6 @@ def astar_new_heuristic(estado:str)->list[str]:
     # substituir a linha abaixo pelo seu codigo
     raise NotImplementedError
 
-def conta_inversoes(estado):
-    # Função para contar o número de inversões no estado
-    inversoes = 0
-    elementos = [e for e in estado if e != '_']
-    for i in range(len(elementos)):
-        for j in range(i + 1, len(elementos)):
-            if elementos[i] > elementos[j]:
-                inversoes += 1
-    return inversoes
-
-def eh_soluvel(estado):
-    # Um estado é solúvel se o número de inversões for par
-    return conta_inversoes(estado) % 2 == 0
-
 if __name__ == "__main__":
     estado = "185423_67"
-    astar_hamming(estado)
+    astar_manhattan(estado)
